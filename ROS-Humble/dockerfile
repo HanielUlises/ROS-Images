@@ -70,7 +70,7 @@ ENV GALLIUM_DRIVER=iris
 ENV LIBVA_DRIVER_NAME=iHD
 
 ENV IGN_GAZEBO_RESOURCE_PATH=/usr/share/ignition
-ENV IGN_GAZEBO_RENDER_ENGINE=ogre2   # ogre2 works well with Mesa
+ENV IGN_GAZEBO_RENDER_ENGINE=ogre2
 
 RUN mkdir -p /ros2_ws/src
 WORKDIR /ros2_ws
