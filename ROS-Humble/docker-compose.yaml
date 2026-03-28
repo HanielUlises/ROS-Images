@@ -26,10 +26,8 @@ services:
       - MESA_GLSL_VERSION_OVERRIDE=450
       - GALLIUM_DRIVER=iris
       - LIBVA_DRIVER_NAME=iHD
-      # Gazebo
       - IGN_GAZEBO_RENDER_ENGINE=ogre2
       - IGN_GAZEBO_RESOURCE_PATH=/usr/share/ignition
-      # Qt (Gazebo GUI)
       - QT_X11_NO_MITSHM=1
 
     volumes:
