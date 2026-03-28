@@ -1,0 +1,82 @@
+# ============================================================
+# ROS2 Humble + Fedora 38 + Ignition Gazebo Fortress
+# GPU: Intel iGPU (ThinkPad X1 Yoga Gen 5) via Mesa/DRI
+# No NVIDIA toolkit needed — uses /dev/dri passthrough
+# ============================================================
+FROM fedora:38
+
+LABEL description="ROS2 Humble + Ignition Gazebo — Intel Mesa/DRI"
+
+RUN dnf -y update && dnf -y install \
+    curl wget git vim \
+    gcc gcc-c++ cmake make \
+    python3 python3-pip \
+    python3-colcon-common-extensions \
+    python3-rosdep \
+    python3-vcstool \
+    # Mesa OpenGL + Intel Iris DRI driver
+    mesa-dri-drivers \
+    mesa-libGL mesa-libGL-devel \
+    mesa-libEGL mesa-libEGL-devel \
+    mesa-libGLES \
+    mesa-vulkan-drivers \
+    libdrm \
+    intel-media-driver \
+    libva libva-utils \
+    # X11 display
+    libXext libX11 libXrender libXi \
+    xorg-x11-server-Xvfb \
+    lsb-release gnupg2 \
+    'dnf-command(copr)' \
+    && dnf clean all
+
+RUN curl -sSL https://packages.osrfoundation.org/gazebo.repo \
+        -o /etc/yum.repos.d/gazebo.repo
+
+RUN dnf copr enable -y @ros/humble 2>/dev/null || true
+
+RUN dnf -y install \
+    ros2-humble-ros-base \
+    ros2-humble-ament-cmake \
+    ros2-humble-rclcpp \
+    ros2-humble-rclpy \
+    ros2-humble-std-msgs \
+    ros2-humble-geometry-msgs \
+    ros2-humble-sensor-msgs \
+    ros2-humble-nav-msgs \
+    ros2-humble-tf2 \
+    ros2-humble-tf2-ros \
+    ros2-humble-launch \
+    ros2-humble-launch-ros \
+    2>/dev/null || true && dnf clean all
+
+RUN dnf -y install \
+    ignition-fortress \
+    ignition-fortress-dev \
+    2>/dev/null || true && dnf clean all
+
+RUN pip3 install --upgrade pip && \
+    pip3 install colcon-common-extensions rosdep vcstool empy lark
+
+RUN rosdep init 2>/dev/null || true && rosdep update
+
+ENV ROS_DISTRO=humble
+ENV ROS_PYTHON_VERSION=3
+
+ENV LIBGL_ALWAYS_SOFTWARE=0
+ENV MESA_GL_VERSION_OVERRIDE=4.5
+ENV MESA_GLSL_VERSION_OVERRIDE=450
+ENV GALLIUM_DRIVER=iris
+ENV LIBVA_DRIVER_NAME=iHD
+
+ENV IGN_GAZEBO_RESOURCE_PATH=/usr/share/ignition
+ENV IGN_GAZEBO_RENDER_ENGINE=ogre2   # ogre2 works well with Mesa
+
+RUN mkdir -p /ros2_ws/src
+WORKDIR /ros2_ws
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["bash"]
